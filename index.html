@@ -45,7 +45,11 @@
     .worker-module-list{display:flex;gap:7px 12px;flex-wrap:wrap;max-width:460px}
     .worker-permission input,.worker-permissions input{accent-color:#1555a6}
     .worker-delete{border:1px solid #efd9d6;border-radius:5px;background:#fff;color:#a64039;padding:7px 9px;font-size:11px;font-weight:700}
-    @media(max-width:700px){.worker-form{grid-template-columns:1fr}.worker-permissions{grid-column:auto}.logout-button{padding:0 8px;font-size:10px}}
+    .admin-delete-product{margin-left:6px;border:1px solid #efd9d6;border-radius:5px;background:#fff;color:#a64039;padding:6px 8px;font-size:10px;font-weight:700}
+    .movement-print-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:12px 0}
+    .movement-print-controls label{display:grid;gap:5px;color:#5c6d7e;font-size:11px;font-weight:700}
+    .movement-print-controls input{height:36px;padding:0 9px;border:1px solid #d7e0e8;border-radius:6px;background:#fff;color:#202d3e}
+    @media(max-width:700px){.worker-form{grid-template-columns:1fr}.worker-permissions{grid-column:auto}.logout-button{padding:0 8px;font-size:10px}.movement-print-controls{align-items:stretch}.movement-print-controls label{flex:1;min-width:135px}}
   </style>
 </head>
 <body class="login-locked">
@@ -101,13 +105,16 @@
       <section class="view" id="view-movements" data-module="movements" aria-labelledby="movements-title">
         <div class="page-heading"><div><p class="eyebrow">ENTRADAS Y SALIDAS</p><h1 id="movements-title">Movimientos</h1><p class="heading-copy">Cada ajuste queda registrado con fecha y detalle.</p></div><button class="button button-dark" data-action="new-movement"><span class="button-icon">＋</span> Registrar movimiento</button></div>
         <div class="toolbar"><label class="search-field"><span>⌕</span><input id="movement-search" type="search" placeholder="Buscar producto o referencia" aria-label="Buscar movimientos"></label><select id="movement-filter" aria-label="Filtrar por tipo"><option value="all">Todos los tipos</option><option value="Entrada">Entradas</option><option value="Salida">Salidas</option><option value="Venta">Ventas</option></select><span class="toolbar-count" id="movement-count"></span></div>
+        <div class="movement-print-controls"><label for="movement-print-start">Desde<input id="movement-print-start" type="date"></label><label for="movement-print-end">Hasta<input id="movement-print-end" type="date"></label><button class="button button-outline" id="print-movements" type="button">Imprimir movimientos</button></div>
         <section class="table-panel"><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>PRODUCTO</th><th>TIPO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>DETALLE</th></tr></thead><tbody id="movement-rows"></tbody></table></div><div class="empty-state hidden" id="movement-empty">Todavía no hay movimientos registrados.</div></section>
       </section>
 
       <section class="view" id="view-sales" data-module="sales" aria-labelledby="sales-title">
-        <div class="page-heading"><div><p class="eyebrow">REGISTRO COMERCIAL</p><h1 id="sales-title">Ventas</h1><p class="heading-copy">Registra cada venta y descuenta el stock automáticamente.</p></div><button class="button button-dark" data-action="new-sale"><span class="button-icon">＋</span> Registrar venta</button></div>
+        <div class="page-heading"><div><p class="eyebrow">REGISTRO COMERCIAL</p><h1 id="sales-title">Ventas</h1><p class="heading-copy">Registra ventas, emite facturas y controla el historial comercial.</p></div><div class="heading-actions"><button class="button button-outline" id="new-invoice"><span class="button-icon">＋</span> Emitir factura</button><button class="button button-dark" data-action="new-sale"><span class="button-icon">＋</span> Registrar venta</button></div></div>
         <div class="stats-grid compact-stats" id="sales-stats"></div>
         <section class="table-panel sales-table-panel"><div class="panel-heading"><div><p class="eyebrow">OPERACIONES</p><h3>Historial de ventas</h3></div><label class="search-field compact-search"><span>⌕</span><input id="sales-search" type="search" placeholder="Buscar venta" aria-label="Buscar ventas"></label></div><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>VENTA</th><th>PRODUCTO</th><th>UNIDADES</th><th>PRECIO UNITARIO</th><th>TOTAL</th></tr></thead><tbody id="sales-rows"></tbody></table></div><div class="empty-state hidden" id="sales-empty">Las ventas que registres aparecerán aquí.</div></section>
+        <section class="table-panel invoice-table-panel"><div class="panel-heading"><div><p class="eyebrow">DOCUMENTOS EMITIDOS</p><h3>Facturas</h3></div><span class="toolbar-count" id="invoice-count"></span></div><div class="table-scroll"><table><thead><tr><th>FOLIO</th><th>FECHA</th><th>CLIENTE</th><th>ARTÍCULOS</th><th>TOTAL</th><th></th></tr></thead><tbody id="invoice-rows"></tbody></table></div><div class="empty-state hidden" id="invoice-empty">Las facturas emitidas aparecerán aquí.</div></section>
+        <p class="invoice-legal-note">Documento comercial. Para emitir factura tributaria electrónica se requiere integrar los datos legales de la empresa y el servicio del SII.</p>
       </section>
 
       <section class="view" id="view-history" data-module="history" aria-labelledby="history-title">
@@ -118,14 +125,12 @@
       </section>
 
       <section class="view" id="view-reports" data-module="reports" aria-labelledby="reports-title">
-        <div class="page-heading"><div><p class="eyebrow">ANÁLISIS Y DOCUMENTOS</p><h1 id="reports-title">Reportes</h1><p class="heading-copy">Una lectura rápida del período y un documento listo para guardar.</p></div><div class="heading-actions"><button class="button button-outline" id="new-invoice"><span class="button-icon">＋</span> Emitir factura</button><button class="button button-dark" id="print-report"><span class="button-icon">↓</span> Descargar PDF</button></div></div>
+        <div class="page-heading"><div><p class="eyebrow">ANÁLISIS Y DOCUMENTOS</p><h1 id="reports-title">Reportes</h1><p class="heading-copy">Una lectura rápida del período y un documento listo para guardar.</p></div><button class="button button-dark" id="print-report"><span class="button-icon">↓</span> Descargar PDF</button></div>
         <div class="report-range"><div><p class="eyebrow">PERÍODO DEL REPORTE</p><h2 id="report-range-title">Resumen completo</h2><p id="report-range-label">Desde el primer registro hasta hoy · <span id="report-generated-date"></span></p></div><span class="report-mark">N<span>.</span></span></div>
         <div class="report-controls panel"><div class="report-controls-group"><label for="report-period">Tipo de reporte</label><select id="report-period"><option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option><option value="yearly">Anual</option><option value="custom">Personalizado</option></select></div><div class="report-controls-group"><label for="report-start">Desde</label><input id="report-start" type="date"></div><div class="report-controls-group"><label for="report-end">Hasta</label><input id="report-end" type="date"></div><button class="button button-dark" id="new-expense"><span class="button-icon">＋</span> Registrar gasto</button></div>
         <div class="stats-grid" id="report-stats"></div>
         <div class="chart-panel panel"><div class="panel-heading"><div><p class="eyebrow">EVOLUCIÓN FINANCIERA</p><h3>Ventas, gastos y utilidad</h3></div><span class="currency-tag">S/</span></div><div class="chart-legend"><span><i class="legend-dot revenue"></i>Ventas</span><span><i class="legend-dot expense"></i>Gastos</span><span><i class="legend-dot profit"></i>Utilidad</span></div><div class="chart-wrap"><svg id="financial-chart" viewBox="0 0 760 260" role="img" aria-label="Gráfico de ventas, gastos y utilidad"></svg></div></div>
         <div class="report-grid"><section class="panel"><div class="panel-heading"><div><p class="eyebrow">VALOR EN BODEGA</p><h3>Productos con más existencias</h3></div></div><div id="report-products" class="report-products"></div></section><section class="panel"><div class="panel-heading"><div><p class="eyebrow">REGISTRO</p><h3>Actividad reciente</h3></div></div><div id="report-activity" class="recent-movements"></div></section></div>
-        <section class="table-panel invoice-table-panel"><div class="panel-heading"><div><p class="eyebrow">DOCUMENTOS EMITIDOS</p><h3>Facturas recientes</h3></div><span class="toolbar-count" id="invoice-count"></span></div><div class="table-scroll"><table><thead><tr><th>FOLIO</th><th>FECHA</th><th>CLIENTE</th><th>ARTÍCULOS</th><th>TOTAL</th><th></th></tr></thead><tbody id="invoice-rows"></tbody></table></div><div class="empty-state hidden" id="invoice-empty">Las facturas que emitas aparecerán aquí.</div></section>
-        <p class="invoice-legal-note">Documento comercial. Para emitir factura tributaria electrónica se requiere integrar los datos legales de la empresa y el servicio del SII.</p>
         <p class="report-note">Los reportes se generan con los datos guardados en este dispositivo.</p>
       </section>
       <section class="view" id="view-admin" data-module="admin" aria-labelledby="admin-title">
@@ -172,7 +177,21 @@
     ];
     const USERS = [{ id: 'administrator', name: 'Administrador', username: 'admin', password: 'neyra2026', role: 'admin', modules: MODULES.map(module => module.id) }];
     let currentUser = null;
+    let emptyStoreInitialized = false;
     const loginForm = document.querySelector('#login-form');
+
+    function startEmptyStore() {
+      if (emptyStoreInitialized) return;
+      data.products = [];
+      data.movements = [];
+      data.sales = [];
+      data.expenses = [];
+      data.invoices = [];
+      data.nextSale = 1;
+      data.nextInvoice = 1;
+      emptyStoreInitialized = true;
+      render();
+    }
 
     function showSessionView(viewName) {
       document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${viewName}`));
@@ -208,6 +227,75 @@
       document.querySelector('#worker-rows').innerHTML = workers.map(worker => `<tr><td><strong>${escapeHtml(worker.name)}</strong></td><td class="sku">${escapeHtml(worker.username)}</td><td><div class="worker-module-list">${MODULES.map(module => `<label class="worker-permission"><input type="checkbox" data-worker-module="${module.id}" data-worker-id="${worker.id}" ${worker.modules.includes(module.id) ? 'checked' : ''}>${module.label}</label>`).join('')}</div></td><td><button type="button" class="worker-delete" data-remove-worker="${worker.id}">Eliminar</button></td></tr>`).join('');
     }
 
+    function updateProductDeleteButtons() {
+      document.querySelectorAll('#inventory-rows tr').forEach(row => {
+        const cell = row.lastElementChild;
+        if (!cell) return;
+        const existingButton = cell.querySelector('[data-admin-delete-product]');
+        if (currentUser?.role !== 'admin') {
+          existingButton?.remove();
+          return;
+        }
+        if (existingButton) return;
+        const menuButton = cell.querySelector('[data-action="product-menu"]');
+        if (!menuButton) return;
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'admin-delete-product';
+        deleteButton.dataset.adminDeleteProduct = menuButton.dataset.id;
+        deleteButton.textContent = 'Eliminar';
+        deleteButton.setAttribute('aria-label', `Eliminar ${row.cells[0]?.textContent.trim() || 'producto'}`);
+        cell.append(deleteButton);
+      });
+    }
+
+    const inventoryRows = document.querySelector('#inventory-rows');
+    new MutationObserver(updateProductDeleteButtons).observe(inventoryRows, { childList: true });
+    inventoryRows.addEventListener('click', event => {
+      const deleteButton = event.target.closest('[data-admin-delete-product]');
+      if (!deleteButton) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (currentUser?.role !== 'admin') return;
+      const product = data.products.find(item => item.id === deleteButton.dataset.adminDeleteProduct);
+      if (!product || !confirm(`¿Eliminar ${product.name} del inventario? Sus movimientos y ventas históricas se conservarán.`)) return;
+      data.products = data.products.filter(item => item.id !== product.id);
+      render();
+    }, true);
+
+    function printMovementRange() {
+      const startValue = document.querySelector('#movement-print-start').value;
+      const endValue = document.querySelector('#movement-print-end').value;
+      if (startValue && endValue && startValue > endValue) {
+        alert('La fecha inicial no puede ser posterior a la fecha final.');
+        return;
+      }
+      const start = startValue ? new Date(`${startValue}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+      const end = endValue ? new Date(`${endValue}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
+      const movements = [...data.movements]
+        .filter(movement => {
+          const timestamp = new Date(movement.date).getTime();
+          return timestamp >= start && timestamp <= end;
+        })
+        .sort((first, second) => new Date(first.date) - new Date(second.date));
+      const fromLabel = startValue ? new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium' }).format(new Date(`${startValue}T12:00:00`)) : 'el inicio';
+      const toLabel = endValue ? new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium' }).format(new Date(`${endValue}T12:00:00`)) : 'hoy';
+      const rows = movements.map(movement => {
+        const product = productFor(movement.productId);
+        const quantity = movement.type === 'Entrada' ? `+${movement.quantity}` : `−${movement.quantity}`;
+        return `<tr><td>${escapeHtml(dateTime.format(new Date(movement.date)))}</td><td>${escapeHtml(product?.name || 'Producto eliminado')}</td><td>${escapeHtml(movement.type)}</td><td>${quantity} uds.</td><td>${escapeHtml(movement.reference || '—')}</td><td>${escapeHtml(movement.detail || '—')}</td></tr>`;
+      }).join('') || '<tr><td colspan="6">No hay movimientos en el período seleccionado.</td></tr>';
+      document.querySelector('#report-paper')?.remove();
+      const paper = document.createElement('article');
+      paper.id = 'report-paper';
+      paper.innerHTML = `<p class="eyebrow">NEYRA · CONTROL DE INVENTARIO</p><h1>Reporte de movimientos</h1><p class="print-subtitle">Período: ${escapeHtml(fromLabel)} a ${escapeHtml(toLabel)} · ${movements.length} movimientos</p><table><thead><tr><th>FECHA Y HORA</th><th>PRODUCTO</th><th>TIPO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>DETALLE</th></tr></thead><tbody>${rows}</tbody></table><p class="print-footer">Reporte generado el ${escapeHtml(dateTime.format(new Date()))}.</p>`;
+      document.body.append(paper);
+      document.body.classList.add('printing');
+      window.print();
+      document.body.classList.remove('printing');
+      paper.remove();
+    }
+
     function signOut() {
       currentUser = null;
       document.body.classList.add('login-locked');
@@ -229,6 +317,7 @@
         return;
       }
 
+      if (user.role === 'admin') startEmptyStore();
       currentUser = user;
       if (currentUser.role === 'admin') renderWorkers();
       applyModuleAccess();
@@ -236,6 +325,8 @@
       document.querySelector('#login-error').textContent = '';
       document.querySelector('#page-title').focus({ preventScroll: true });
     });
+
+    document.querySelector('#print-movements').addEventListener('click', printMovementRange);
 
     document.querySelector('#logout-button').addEventListener('click', signOut);
 
@@ -286,7 +377,7 @@
 
     document.addEventListener('click', event => {
       if (!currentUser) return;
-      const actionTrigger = event.target.closest('[data-action]');
+      const actionTrigger = event.target.closest('[data-action], #new-invoice, #print-movements');
       const actionModules = {
         'new-product': 'inventory',
         'product-menu': 'inventory',
@@ -295,10 +386,20 @@
         'new-expense': 'reports',
         'add-invoice-line': 'reports',
         'remove-invoice-line': 'reports',
-        'print-invoice': 'reports'
+        'print-invoice': 'sales'
       };
       const requiredModule = actionModules[actionTrigger?.dataset.action];
       if (requiredModule && !hasModuleAccess(requiredModule)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (actionTrigger?.id === 'new-invoice' && !hasModuleAccess('sales')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (actionTrigger?.id === 'print-movements' && !hasModuleAccess('movements')) {
         event.preventDefault();
         event.stopImmediatePropagation();
         return;
