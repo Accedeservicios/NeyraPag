@@ -7,8 +7,43 @@
   <title>NEYRA | Ferretería</title>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
+  <style>
+    body.login-locked .app-shell,body.login-locked #modal-root,body.login-locked #toast{display:none!important}
+    .login-gate{display:none;min-height:100vh;padding:24px;place-items:center;background:#f1f5f8;color:#202d3e;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+    body.login-locked .login-gate{display:grid}
+    .login-card{width:min(100%,420px);padding:38px;background:#fff;border:1px solid #dfe7ed;border-radius:12px;box-shadow:0 22px 70px rgba(19,54,100,.12);animation:login-enter .35s ease-out both}
+    .login-brand{display:flex;align-items:center;gap:11px;margin-bottom:38px;color:#202d3e;font-size:20px;font-weight:800;letter-spacing:.5px}
+    .login-mark{display:grid;width:40px;height:40px;place-items:center;border-radius:10px;background:#1555a6;color:#fff;font-size:21px}
+    .login-eyebrow{margin:0 0 8px;color:#1555a6;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+    .login-card h1{margin:0;font-size:29px;line-height:1.2}
+    .login-copy{margin:10px 0 28px;color:#718095;font-size:15px;line-height:1.5}
+    .login-form{display:grid;gap:17px}
+    .login-field{display:grid;gap:7px;color:#34443a;font-size:13px;font-weight:700}
+    .login-field input{width:100%;height:47px;padding:0 13px;border:1px solid #d7e0e8;border-radius:7px;background:#fff;color:#202d3e;font:inherit;font-weight:400;outline:none}
+    .login-field input:focus{border-color:#1555a6;box-shadow:0 0 0 3px rgba(21,85,166,.12)}
+    .login-submit{height:48px;margin-top:4px;border:0;border-radius:7px;background:#1555a6;color:#fff;font:700 15px system-ui,-apple-system,'Segoe UI',sans-serif;transition:background .2s,transform .2s}
+    .login-submit:hover{background:#10386d;transform:translateY(-1px)}
+    .login-error{min-height:20px;margin:0;color:#b34c44;font-size:13px}
+    @keyframes login-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:480px){.login-card{padding:27px 22px}.login-card h1{font-size:25px}}
+    @media(prefers-reduced-motion:reduce){.login-card{animation:none}.login-submit{transition:none}}
+  </style>
 </head>
-<body>
+<body class="login-locked">
+  <main class="login-gate" id="login-gate">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-brand"><span class="login-mark" aria-hidden="true">N</span><span>NEYRA</span></div>
+      <p class="login-eyebrow">Acceso al sistema</p>
+      <h1 id="login-title">Bienvenido</h1>
+      <p class="login-copy">Ingresa tus credenciales para continuar.</p>
+      <form class="login-form" id="login-form">
+        <label class="login-field" for="login-username">Usuario<input id="login-username" name="username" autocomplete="username" required></label>
+        <label class="login-field" for="login-password">Contraseña<input id="login-password" name="password" type="password" autocomplete="current-password" required></label>
+        <p class="login-error" id="login-error" role="alert" aria-live="polite"></p>
+        <button class="login-submit" type="submit">Ingresar</button>
+      </form>
+    </section>
+  </main>
   <div class="app-shell">
     <main class="workspace">
       <header class="topbar">
@@ -19,7 +54,7 @@
 
       <section class="view active" id="view-dashboard" aria-labelledby="page-title">
         <div class="page-heading">
-          <div><p class="eyebrow" id="today-label"></p><h1 id="page-title">Stock y ventas, bajo control.</h1><p class="heading-copy">Todo lo que tu ferretería necesita, en un solo lugar.</p></div>
+          <div><p class="eyebrow" id="today-label"></p><h1 id="page-title" tabindex="-1">Stock y ventas, bajo control.</h1><p class="heading-copy">Todo lo que tu ferretería necesita, en un solo lugar.</p></div>
           <button class="button button-dark" data-action="new-movement"><span class="button-icon">＋</span> Registrar movimiento</button>
         </div>
 
@@ -81,5 +116,27 @@
   </div>
   <div id="modal-root"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const LOGIN_USERNAME = 'admin';
+    const LOGIN_PASSWORD = 'neyra2026';
+    const loginForm = document.querySelector('#login-form');
+
+    loginForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const formData = new FormData(loginForm);
+      const username = String(formData.get('username')).trim();
+      const password = String(formData.get('password'));
+
+      if (username !== LOGIN_USERNAME || password !== LOGIN_PASSWORD) {
+        document.querySelector('#login-error').textContent = 'Usuario o contraseña incorrectos.';
+        document.querySelector('#login-password').select();
+        return;
+      }
+
+      document.body.classList.remove('login-locked');
+      document.querySelector('#login-error').textContent = '';
+      document.querySelector('#page-title').focus({ preventScroll: true });
+    });
+  </script>
 </body>
 </html>
