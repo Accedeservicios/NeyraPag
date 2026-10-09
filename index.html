@@ -27,6 +27,25 @@
     @keyframes login-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @media(max-width:480px){.login-card{padding:27px 22px}.login-card h1{font-size:25px}}
     @media(prefers-reduced-motion:reduce){.login-card{animation:none}.login-submit{transition:none}}
+    .module-blocked{display:none!important}
+    .logout-button{height:32px;padding:0 11px;border:1px solid #d9e2ea;border-radius:6px;background:#fff;color:#34443a;font-size:11px;font-weight:700}
+    .logout-button:hover{border-color:#1555a6;color:#1555a6}
+    .admin-panel{margin:14px 0;padding:20px}
+    .admin-panel h2{margin:0 0 5px;font-size:17px}
+    .admin-description{margin:0 0 18px;color:#778597;font-size:13px}
+    .worker-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+    .worker-form label{display:grid;gap:6px;color:#34443a;font-size:12px;font-weight:700}
+    .worker-form input:not([type=checkbox]){height:40px;padding:0 10px;border:1px solid #d7e0e8;border-radius:6px;color:#202d3e}
+    .worker-permissions{grid-column:1/-1;display:flex;gap:10px 17px;flex-wrap:wrap;padding:4px 0}
+    .worker-permissions legend{margin-bottom:9px;color:#34443a;font-size:12px;font-weight:700}
+    .worker-permissions label,.worker-permission{display:flex!important;grid-template-columns:none!important;align-items:center;gap:6px!important;color:#5c6d7e!important;font-size:12px!important;font-weight:500!important}
+    .worker-form button{justify-self:start}
+    .worker-table{min-width:720px}
+    .worker-table td{vertical-align:top}
+    .worker-module-list{display:flex;gap:7px 12px;flex-wrap:wrap;max-width:460px}
+    .worker-permission input,.worker-permissions input{accent-color:#1555a6}
+    .worker-delete{border:1px solid #efd9d6;border-radius:5px;background:#fff;color:#a64039;padding:7px 9px;font-size:11px;font-weight:700}
+    @media(max-width:700px){.worker-form{grid-template-columns:1fr}.worker-permissions{grid-column:auto}.logout-button{padding:0 8px;font-size:10px}}
   </style>
 </head>
 <body class="login-locked">
@@ -49,10 +68,10 @@
       <header class="topbar">
         <div class="brand brand-mobile"><span class="brand-mark">N</span><span>NEYRA</span></div>
         <div class="breadcrumb"><span>Operaciones</span><span class="breadcrumb-divider">/</span><strong id="breadcrumb-current">Resumen</strong></div>
-        <div class="topbar-right"><span class="live-dot"></span><span>Datos temporales de esta sesión</span><button class="avatar" aria-label="Perfil">N</button></div>
+        <div class="topbar-right"><span class="live-dot"></span><span>Datos temporales de esta sesión</span><button class="avatar" aria-label="Perfil">N</button><button type="button" class="logout-button" id="logout-button">Cerrar sesión</button></div>
       </header>
 
-      <section class="view active" id="view-dashboard" aria-labelledby="page-title">
+      <section class="view active" id="view-dashboard" data-module="dashboard" aria-labelledby="page-title">
         <div class="page-heading">
           <div><p class="eyebrow" id="today-label"></p><h1 id="page-title" tabindex="-1">Stock y ventas, bajo control.</h1><p class="heading-copy">Todo lo que tu ferretería necesita, en un solo lugar.</p></div>
           <button class="button button-dark" data-action="new-movement"><span class="button-icon">＋</span> Registrar movimiento</button>
@@ -73,32 +92,32 @@
         </div>
       </section>
 
-      <section class="view" id="view-inventory" aria-labelledby="inventory-title">
+      <section class="view" id="view-inventory" data-module="inventory" aria-labelledby="inventory-title">
         <div class="page-heading"><div><p class="eyebrow">CATÁLOGO Y EXISTENCIAS</p><h1 id="inventory-title">Inventario</h1><p class="heading-copy">Consulta niveles, precios y estado de cada producto.</p></div><button class="button button-dark" data-action="new-product"><span class="button-icon">＋</span> Añadir producto</button></div>
         <div class="toolbar"><label class="search-field"><span>⌕</span><input id="inventory-search" type="search" placeholder="Buscar producto o SKU" aria-label="Buscar en inventario"></label><select id="inventory-filter" aria-label="Filtrar inventario"><option value="all">Todos los productos</option><option value="low">Stock bajo</option><option value="out">Agotados</option></select><span class="toolbar-count" id="inventory-count"></span></div>
         <section class="table-panel"><div class="table-scroll"><table><thead><tr><th>PRODUCTO</th><th>SKU</th><th>CATEGORÍA</th><th>PRECIO</th><th>EXISTENCIAS</th><th>ESTADO</th><th></th></tr></thead><tbody id="inventory-rows"></tbody></table></div><div class="empty-state hidden" id="inventory-empty">No hay productos que coincidan con esta búsqueda.</div></section>
       </section>
 
-      <section class="view" id="view-movements" aria-labelledby="movements-title">
+      <section class="view" id="view-movements" data-module="movements" aria-labelledby="movements-title">
         <div class="page-heading"><div><p class="eyebrow">ENTRADAS Y SALIDAS</p><h1 id="movements-title">Movimientos</h1><p class="heading-copy">Cada ajuste queda registrado con fecha y detalle.</p></div><button class="button button-dark" data-action="new-movement"><span class="button-icon">＋</span> Registrar movimiento</button></div>
         <div class="toolbar"><label class="search-field"><span>⌕</span><input id="movement-search" type="search" placeholder="Buscar producto o referencia" aria-label="Buscar movimientos"></label><select id="movement-filter" aria-label="Filtrar por tipo"><option value="all">Todos los tipos</option><option value="Entrada">Entradas</option><option value="Salida">Salidas</option><option value="Venta">Ventas</option></select><span class="toolbar-count" id="movement-count"></span></div>
         <section class="table-panel"><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>PRODUCTO</th><th>TIPO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>DETALLE</th></tr></thead><tbody id="movement-rows"></tbody></table></div><div class="empty-state hidden" id="movement-empty">Todavía no hay movimientos registrados.</div></section>
       </section>
 
-      <section class="view" id="view-sales" aria-labelledby="sales-title">
+      <section class="view" id="view-sales" data-module="sales" aria-labelledby="sales-title">
         <div class="page-heading"><div><p class="eyebrow">REGISTRO COMERCIAL</p><h1 id="sales-title">Ventas</h1><p class="heading-copy">Registra cada venta y descuenta el stock automáticamente.</p></div><button class="button button-dark" data-action="new-sale"><span class="button-icon">＋</span> Registrar venta</button></div>
         <div class="stats-grid compact-stats" id="sales-stats"></div>
         <section class="table-panel sales-table-panel"><div class="panel-heading"><div><p class="eyebrow">OPERACIONES</p><h3>Historial de ventas</h3></div><label class="search-field compact-search"><span>⌕</span><input id="sales-search" type="search" placeholder="Buscar venta" aria-label="Buscar ventas"></label></div><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>VENTA</th><th>PRODUCTO</th><th>UNIDADES</th><th>PRECIO UNITARIO</th><th>TOTAL</th></tr></thead><tbody id="sales-rows"></tbody></table></div><div class="empty-state hidden" id="sales-empty">Las ventas que registres aparecerán aquí.</div></section>
       </section>
 
-      <section class="view" id="view-history" aria-labelledby="history-title">
+      <section class="view" id="view-history" data-module="history" aria-labelledby="history-title">
         <div class="page-heading"><div><p class="eyebrow">REGISTRO COMPLETO</p><h1 id="history-title">Trazabilidad</h1><p class="heading-copy">El historial unificado de entradas, salidas y ventas.</p></div><button class="button button-outline" data-view="reports">Generar reporte <span>↗</span></button></div>
         <div class="history-summary" id="history-summary"></div>
         <div class="toolbar"><label class="search-field"><span>⌕</span><input id="history-search" type="search" placeholder="Producto, referencia o detalle" aria-label="Buscar en el historial"></label><select id="history-filter" aria-label="Filtrar historial"><option value="all">Todos los movimientos</option><option value="Entrada">Entradas</option><option value="Salida">Salidas</option><option value="Venta">Ventas</option></select><span class="toolbar-count" id="history-count"></span></div>
         <section class="table-panel"><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>PRODUCTO</th><th>TIPO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>DETALLE</th></tr></thead><tbody id="history-rows"></tbody></table></div><div class="empty-state hidden" id="history-empty">No hay registros que coincidan.</div></section>
       </section>
 
-      <section class="view" id="view-reports" aria-labelledby="reports-title">
+      <section class="view" id="view-reports" data-module="reports" aria-labelledby="reports-title">
         <div class="page-heading"><div><p class="eyebrow">ANÁLISIS Y DOCUMENTOS</p><h1 id="reports-title">Reportes</h1><p class="heading-copy">Una lectura rápida del período y un documento listo para guardar.</p></div><div class="heading-actions"><button class="button button-outline" id="new-invoice"><span class="button-icon">＋</span> Emitir factura</button><button class="button button-dark" id="print-report"><span class="button-icon">↓</span> Descargar PDF</button></div></div>
         <div class="report-range"><div><p class="eyebrow">PERÍODO DEL REPORTE</p><h2 id="report-range-title">Resumen completo</h2><p id="report-range-label">Desde el primer registro hasta hoy · <span id="report-generated-date"></span></p></div><span class="report-mark">N<span>.</span></span></div>
         <div class="report-controls panel"><div class="report-controls-group"><label for="report-period">Tipo de reporte</label><select id="report-period"><option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option><option value="yearly">Anual</option><option value="custom">Personalizado</option></select></div><div class="report-controls-group"><label for="report-start">Desde</label><input id="report-start" type="date"></div><div class="report-controls-group"><label for="report-end">Hasta</label><input id="report-end" type="date"></div><button class="button button-dark" id="new-expense"><span class="button-icon">＋</span> Registrar gasto</button></div>
@@ -109,17 +128,93 @@
         <p class="invoice-legal-note">Documento comercial. Para emitir factura tributaria electrónica se requiere integrar los datos legales de la empresa y el servicio del SII.</p>
         <p class="report-note">Los reportes se generan con los datos guardados en este dispositivo.</p>
       </section>
+      <section class="view" id="view-admin" data-module="admin" aria-labelledby="admin-title">
+        <div class="page-heading"><div><p class="eyebrow">CONTROL DE ACCESOS</p><h1 id="admin-title">Administrador y trabajadores</h1><p class="heading-copy">Crea trabajadores y decide qué módulos puede utilizar cada uno.</p></div></div>
+        <section class="panel admin-panel">
+          <h2>Crear trabajador</h2>
+          <p class="admin-description">Asigna un usuario, contraseña y uno o más módulos.</p>
+          <form class="worker-form" id="worker-form">
+            <label for="worker-name">Nombre<input id="worker-name" name="name" autocomplete="off" required></label>
+            <label for="worker-username">Usuario<input id="worker-username" name="username" autocomplete="off" required></label>
+            <label for="worker-password">Contraseña<input id="worker-password" name="password" type="password" autocomplete="new-password" required></label>
+            <fieldset class="worker-permissions"><legend>Módulos autorizados</legend>
+              <label><input type="checkbox" name="modules" value="dashboard"> Resumen</label>
+              <label><input type="checkbox" name="modules" value="inventory"> Inventario</label>
+              <label><input type="checkbox" name="modules" value="movements"> Movimientos</label>
+              <label><input type="checkbox" name="modules" value="sales"> Ventas</label>
+              <label><input type="checkbox" name="modules" value="history"> Trazabilidad</label>
+              <label><input type="checkbox" name="modules" value="reports"> Reportes</label>
+            </fieldset>
+            <button class="button button-dark" type="submit">Crear trabajador</button>
+          </form>
+        </section>
+        <section class="table-panel admin-panel">
+          <div class="panel-heading"><div><p class="eyebrow">CUENTAS DEL NEGOCIO</p><h3>Trabajadores y permisos</h3></div><span class="toolbar-count" id="worker-count">0 trabajadores</span></div>
+          <div class="table-scroll"><table class="worker-table"><thead><tr><th>NOMBRE</th><th>USUARIO</th><th>MÓDULOS PERMITIDOS</th><th></th></tr></thead><tbody id="worker-rows"></tbody></table></div>
+          <div class="empty-state" id="worker-empty">Aún no has creado trabajadores.</div>
+        </section>
+      </section>
       <footer class="workspace-footer"><span>NEYRA FERRETERÍA <span class="footer-separator">·</span> STOCK Y VENTAS</span><span id="footer-clock"></span></footer>
     </main>
 
-    <aside class="side-nav" aria-label="Navegación principal"><div class="brand"><span class="brand-mark">N</span><span>NEYRA</span></div><div class="nav-caption">ESPACIO DE TRABAJO</div><nav><button class="nav-link active" data-view="dashboard"><span class="nav-icon">⌂</span><span>Resumen</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="inventory"><span class="nav-icon">▦</span><span>Inventario</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="movements"><span class="nav-icon">⇄</span><span>Movimientos</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="sales"><span class="nav-icon">↗</span><span>Ventas</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="history"><span class="nav-icon">◷</span><span>Trazabilidad</span><span class="nav-active-mark"></span></button></nav><div class="nav-caption nav-caption-lower">GESTIÓN</div><nav><button class="nav-link" data-view="reports"><span class="nav-icon">▤</span><span>Reportes</span><span class="nav-active-mark"></span></button></nav><div class="nav-bottom"><div class="nav-user"><span class="user-avatar">N</span><span><strong>Mi negocio</strong><small>Espacio local</small></span><span class="user-menu">···</span></div><div class="nav-version">NEYRA <span>·</span> VERSIÓN 1.0</div></div></aside>
+    <aside class="side-nav" aria-label="Navegación principal"><div class="brand"><span class="brand-mark">N</span><span>NEYRA</span></div><div class="nav-caption">ESPACIO DE TRABAJO</div><nav><button class="nav-link active" data-view="dashboard"><span class="nav-icon">⌂</span><span>Resumen</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="inventory"><span class="nav-icon">▦</span><span>Inventario</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="movements"><span class="nav-icon">⇄</span><span>Movimientos</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="sales"><span class="nav-icon">↗</span><span>Ventas</span><span class="nav-active-mark"></span></button><button class="nav-link" data-view="history"><span class="nav-icon">◷</span><span>Trazabilidad</span><span class="nav-active-mark"></span></button></nav><div class="nav-caption nav-caption-lower">GESTIÓN</div><nav><button class="nav-link" data-view="reports"><span class="nav-icon">▤</span><span>Reportes</span><span class="nav-active-mark"></span></button><button class="nav-link module-blocked" data-view="admin" id="admin-nav-link"><span class="nav-icon">⚙</span><span>Administración</span><span class="nav-active-mark"></span></button></nav><div class="nav-bottom"><div class="nav-user"><span class="user-avatar">N</span><span><strong id="session-user-name">Mi negocio</strong><small id="session-user-role">Sin sesión</small></span></div><div class="nav-version">NEYRA <span>·</span> VERSIÓN 1.0</div></div></aside>
   </div>
   <div id="modal-root"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
-    const LOGIN_USERNAME = 'admin';
-    const LOGIN_PASSWORD = 'neyra2026';
+    const MODULES = [
+      { id: 'dashboard', label: 'Resumen' },
+      { id: 'inventory', label: 'Inventario' },
+      { id: 'movements', label: 'Movimientos' },
+      { id: 'sales', label: 'Ventas' },
+      { id: 'history', label: 'Trazabilidad' },
+      { id: 'reports', label: 'Reportes' }
+    ];
+    const USERS = [{ id: 'administrator', name: 'Administrador', username: 'admin', password: 'neyra2026', role: 'admin', modules: MODULES.map(module => module.id) }];
+    let currentUser = null;
     const loginForm = document.querySelector('#login-form');
+
+    function showSessionView(viewName) {
+      document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${viewName}`));
+      document.querySelectorAll('.nav-link[data-view]').forEach(link => link.classList.toggle('active', link.dataset.view === viewName));
+      const activeLink = document.querySelector(`.nav-link[data-view="${viewName}"] span:nth-child(2)`);
+      document.querySelector('#breadcrumb-current').textContent = activeLink?.textContent || 'Resumen';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hasModuleAccess(moduleId) {
+      return Boolean(currentUser && (currentUser.role === 'admin' || currentUser.modules.includes(moduleId)));
+    }
+
+    function applyModuleAccess() {
+      document.querySelectorAll('.nav-link[data-view]').forEach(link => {
+        const allowed = link.dataset.view === 'admin' ? currentUser.role === 'admin' : hasModuleAccess(link.dataset.view);
+        link.classList.toggle('module-blocked', !allowed);
+      });
+      document.querySelectorAll('.view[data-module]').forEach(view => {
+        const allowed = view.dataset.module === 'admin' ? currentUser.role === 'admin' : hasModuleAccess(view.dataset.module);
+        view.classList.toggle('module-blocked', !allowed);
+      });
+      document.querySelector('#session-user-name').textContent = currentUser.name;
+      document.querySelector('#session-user-role').textContent = currentUser.role === 'admin' ? 'Administrador' : 'Trabajador';
+      document.querySelector('#admin-nav-link').classList.toggle('module-blocked', currentUser.role !== 'admin');
+      showSessionView(currentUser.role === 'admin' ? 'dashboard' : currentUser.modules[0]);
+    }
+
+    function renderWorkers() {
+      const workers = USERS.filter(user => user.role === 'worker');
+      document.querySelector('#worker-count').textContent = `${workers.length} trabajador${workers.length === 1 ? '' : 'es'}`;
+      document.querySelector('#worker-empty').classList.toggle('hidden', workers.length > 0);
+      document.querySelector('#worker-rows').innerHTML = workers.map(worker => `<tr><td><strong>${escapeHtml(worker.name)}</strong></td><td class="sku">${escapeHtml(worker.username)}</td><td><div class="worker-module-list">${MODULES.map(module => `<label class="worker-permission"><input type="checkbox" data-worker-module="${module.id}" data-worker-id="${worker.id}" ${worker.modules.includes(module.id) ? 'checked' : ''}>${module.label}</label>`).join('')}</div></td><td><button type="button" class="worker-delete" data-remove-worker="${worker.id}">Eliminar</button></td></tr>`).join('');
+    }
+
+    function signOut() {
+      currentUser = null;
+      document.body.classList.add('login-locked');
+      loginForm.reset();
+      document.querySelector('#login-error').textContent = '';
+      document.querySelector('#login-username').focus();
+    }
 
     loginForm.addEventListener('submit', event => {
       event.preventDefault();
@@ -127,16 +222,96 @@
       const username = String(formData.get('username')).trim();
       const password = String(formData.get('password'));
 
-      if (username !== LOGIN_USERNAME || password !== LOGIN_PASSWORD) {
+      const user = USERS.find(account => account.username.toLowerCase() === username.toLowerCase() && account.password === password);
+      if (!user) {
         document.querySelector('#login-error').textContent = 'Usuario o contraseña incorrectos.';
         document.querySelector('#login-password').select();
         return;
       }
 
+      currentUser = user;
+      if (currentUser.role === 'admin') renderWorkers();
+      applyModuleAccess();
       document.body.classList.remove('login-locked');
       document.querySelector('#login-error').textContent = '';
       document.querySelector('#page-title').focus({ preventScroll: true });
     });
+
+    document.querySelector('#logout-button').addEventListener('click', signOut);
+
+    document.querySelector('#worker-form').addEventListener('submit', event => {
+      event.preventDefault();
+      if (currentUser?.role !== 'admin') return;
+      const form = event.currentTarget;
+      const formData = new FormData(form);
+      const name = String(formData.get('name')).trim();
+      const username = String(formData.get('username')).trim();
+      const password = String(formData.get('password'));
+      const modules = formData.getAll('modules').map(String);
+      if (!name || !username || !password || modules.length === 0) {
+        alert('Completa los datos y selecciona al menos un módulo.');
+        return;
+      }
+      if (USERS.some(user => user.username.toLowerCase() === username.toLowerCase())) {
+        alert('Ese nombre de usuario ya está registrado.');
+        return;
+      }
+      USERS.push({ id: `worker-${Date.now()}`, name, username, password, role: 'worker', modules });
+      form.reset();
+      renderWorkers();
+    });
+
+    document.querySelector('#worker-rows').addEventListener('change', event => {
+      const checkbox = event.target.closest('[data-worker-module]');
+      if (!checkbox || currentUser?.role !== 'admin') return;
+      const worker = USERS.find(user => user.id === checkbox.dataset.workerId);
+      if (!worker) return;
+      if (!checkbox.checked && worker.modules.length === 1) {
+        checkbox.checked = true;
+        alert('Cada trabajador debe tener al menos un módulo autorizado.');
+        return;
+      }
+      worker.modules = checkbox.checked
+        ? [...new Set([...worker.modules, checkbox.dataset.workerModule])]
+        : worker.modules.filter(module => module !== checkbox.dataset.workerModule);
+    });
+
+    document.querySelector('#worker-rows').addEventListener('click', event => {
+      const button = event.target.closest('[data-remove-worker]');
+      if (!button || currentUser?.role !== 'admin') return;
+      const index = USERS.findIndex(user => user.id === button.dataset.removeWorker && user.role === 'worker');
+      if (index !== -1) USERS.splice(index, 1);
+      renderWorkers();
+    });
+
+    document.addEventListener('click', event => {
+      if (!currentUser) return;
+      const actionTrigger = event.target.closest('[data-action]');
+      const actionModules = {
+        'new-product': 'inventory',
+        'product-menu': 'inventory',
+        'new-movement': 'movements',
+        'new-sale': 'sales',
+        'new-expense': 'reports',
+        'add-invoice-line': 'reports',
+        'remove-invoice-line': 'reports',
+        'print-invoice': 'reports'
+      };
+      const requiredModule = actionModules[actionTrigger?.dataset.action];
+      if (requiredModule && !hasModuleAccess(requiredModule)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      const viewTrigger = event.target.closest('[data-view]');
+      if (!viewTrigger) return;
+      const requestedModule = viewTrigger.dataset.view;
+      if (requestedModule === 'admin' ? currentUser.role !== 'admin' : !hasModuleAccess(requestedModule)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showSessionView(currentUser.role === 'admin' ? 'dashboard' : currentUser.modules[0]);
+      }
+    }, true);
   </script>
 </body>
 </html>
