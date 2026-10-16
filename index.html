@@ -376,6 +376,16 @@
           });
         };
 
+        const originalShowSaleForm = showSaleForm;
+        showSaleForm = function () {
+          originalShowSaleForm();
+          const unitPriceInput = document.querySelector('#field-unitPrice');
+          if (unitPriceInput) {
+            unitPriceInput.step = '0.01';
+            unitPriceInput.inputMode = 'decimal';
+          }
+        };
+
         const originalPrintReport = printReport;
         printReport = function () {
           const selectedDay = document.querySelector('#report-print-day').value;
