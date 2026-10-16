@@ -113,7 +113,7 @@
           <div class="page-heading"><div><p class="eyebrow">ENTRADAS Y SALIDAS</p><h1 id="movements-title">Movimientos</h1><p class="heading-copy">Cada ajuste queda registrado con fecha y detalle.</p></div><button class="button button-dark" data-action="new-movement"><span class="button-icon">＋</span> Registrar movimiento</button></div>
           <div class="toolbar"><label class="search-field"><span>⌕</span><input id="movement-search" type="search" placeholder="Buscar producto o referencia" aria-label="Buscar movimientos"></label><select id="movement-filter" aria-label="Filtrar por tipo"><option value="all">Todos los tipos</option><option value="Entrada">Entradas</option><option value="Salida">Salidas</option><option value="Venta">Ventas</option></select><span class="toolbar-count" id="movement-count"></span></div>
           <div class="movement-print-controls"><label for="movement-print-start">Desde<input id="movement-print-start" type="date"></label><label for="movement-print-end">Hasta<input id="movement-print-end" type="date"></label><button class="button button-outline" id="print-movements" type="button">Imprimir movimientos</button></div>
-          <section class="table-panel"><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>PRODUCTO</th><th>TIPO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>DETALLE</th></tr></thead><tbody id="movement-rows"></tbody></table></div><div class="empty-state hidden" id="movement-empty">Todavía no hay movimientos registrados.</div></section>
+          <section class="table-panel"><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>PRODUCTO</th><th>TIPO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>DETALLE</th><th></th></tr></thead><tbody id="movement-rows"></tbody></table></div><div class="empty-state hidden" id="movement-empty">Todavía no hay movimientos registrados.</div></section>
         </section>
 
         <section class="view" id="view-sales" data-module="sales" aria-labelledby="sales-title">
@@ -282,6 +282,62 @@
         }, true);
 
         money = value => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 2 }).format(Number(value) || 0);
+
+        movementRowsHtml = function (movements) {
+          return movements.map(movement => {
+            const product = productFor(movement.productId);
+            const productName = product?.name || movement.productName || 'Producto eliminado';
+            const productSku = product?.sku || movement.productSku || '';
+            const [symbol, color] = movementSymbol(movement.type);
+            const quantity = movement.type === 'Entrada' ? `+${movement.quantity}` : `−${movement.quantity}`;
+            const productMarkup = product
+              ? `<strong>${escapeHtml(productName)}</strong><small>${escapeHtml(productSku)}</small>`
+              : `<strong>Producto eliminado</strong><small>${escapeHtml(productName)}</small><small>SKU: ${escapeHtml(productSku)}</small>`;
+            return `<tr data-movement-id="${escapeHtml(movement.id)}"><td>${dateTime.format(new Date(movement.date))}</td><td>${productMarkup}</td><td><span class="movement-symbol ${color}">${symbol}</span> ${escapeHtml(movement.type)}</td><td>${quantity} uds.</td><td class="sku">${escapeHtml(movement.reference || '—')}</td><td>${escapeHtml(movement.detail || '—')}</td><td></td></tr>`;
+          }).join('');
+        };
+
+        showMovementForm = function () {
+          if (!data.products.length) return toast('Añade un producto antes de registrar movimientos.');
+          const choices = data.products.map(product => `<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)} · ${product.stock} uds.</option>`).join('');
+          const fields = field('Tipo de movimiento', 'type', { type: 'select', choices: '<option value="Entrada">Entrada</option><option value="Salida">Salida</option>' }) +
+            field('Producto', 'productId', { type: 'select', choices }) +
+            field('Cantidad', 'quantity', { type: 'number', min: '1', step: '1' }) +
+            field('Referencia', 'reference', { placeholder: 'SKU del producto seleccionado' }) +
+            field('Fecha del movimiento', 'movementDate', { type: 'date', value: localDateValue() }) +
+            field('Detalle', 'detail', { placeholder: 'Motivo o comentario', full: true, required: false });
+          openModal('Registrar movimiento', 'Elige el producto y la fecha del movimiento.', fields, 'Guardar movimiento', values => {
+            const product = productFor(values.productId);
+            const quantity = Number(values.quantity);
+            const movementDate = values.movementDate ? new Date(`${values.movementDate}T12:00:00`) : null;
+            if (!product || !Number.isInteger(quantity) || quantity < 1 || !movementDate || Number.isNaN(movementDate.getTime())) return toast('Revisa el producto, la cantidad y la fecha.');
+            if (values.type === 'Salida' && quantity > product.stock) return toast(`Solo hay ${product.stock} unidades disponibles.`);
+            product.stock += values.type === 'Entrada' ? quantity : -quantity;
+            data.movements.push({
+              id: `M-${Date.now()}`,
+              productId: product.id,
+              productName: product.name,
+              productSku: product.sku,
+              type: values.type,
+              quantity,
+              reference: product.sku,
+              detail: values.detail.trim() || (values.type === 'Entrada' ? 'Ingreso de inventario' : 'Salida de inventario'),
+              date: movementDate.toISOString()
+            });
+            closeModal();
+            render();
+            toast(`${values.type} de ${quantity} unidades registrada.`);
+          });
+          const productSelect = document.querySelector('#field-productId');
+          const referenceInput = document.querySelector('#field-reference');
+          if (referenceInput) {
+            referenceInput.value = productFor(productSelect.value)?.sku || '';
+            referenceInput.readOnly = true;
+          }
+          productSelect?.addEventListener('change', () => {
+            if (referenceInput) referenceInput.value = productFor(productSelect.value)?.sku || '';
+          });
+        };
 
         const originalMovementRowsFor = movementRowsFor;
         movementRowsFor = function (search, filter) {
@@ -536,8 +592,45 @@
         if (currentUser?.role !== 'admin') return;
         const product = data.products.find(item => item.id === deleteButton.dataset.adminDeleteProduct);
         if (!product || !confirm(`¿Eliminar ${product.name} del inventario? Sus movimientos y ventas históricas se conservarán.`)) return;
+        data.movements.filter(movement => movement.productId === product.id).forEach(movement => {
+          movement.productName = movement.productName || product.name;
+          movement.productSku = movement.productSku || product.sku;
+        });
         data.products = data.products.filter(item => item.id !== product.id);
         render();
+      }, true);
+
+      const movementRows = document.querySelector('#movement-rows');
+      function updateMovementDeleteButtons() {
+        movementRows.querySelectorAll('tr').forEach(row => {
+          const cell = row.lastElementChild;
+          const existingButton = cell?.querySelector('[data-delete-movement]');
+          if (currentUser?.role !== 'admin') {
+            existingButton?.remove();
+            return;
+          }
+          if (existingButton) return;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'worker-delete';
+          button.dataset.deleteMovement = row.dataset.movementId;
+          button.textContent = 'Eliminar';
+          cell?.append(button);
+        });
+      }
+
+      new MutationObserver(updateMovementDeleteButtons).observe(movementRows, { childList: true });
+      movementRows.addEventListener('click', event => {
+        const deleteButton = event.target.closest('[data-delete-movement]');
+        if (!deleteButton) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (currentUser?.role !== 'admin') return;
+        const movement = data.movements.find(item => item.id === deleteButton.dataset.deleteMovement);
+        if (!movement || !confirm('¿Eliminar definitivamente este movimiento?')) return;
+        data.movements = data.movements.filter(item => item.id !== movement.id);
+        render();
+        toast('Movimiento eliminado.');
       }, true);
 
       function printMovementRange() {
@@ -560,7 +653,10 @@
         const rows = movements.map(movement => {
           const product = productFor(movement.productId);
           const quantity = movement.type === 'Entrada' ? `+${movement.quantity}` : `−${movement.quantity}`;
-          return `<tr><td>${escapeHtml(dateTime.format(new Date(movement.date)))}</td><td>${escapeHtml(product?.name || 'Producto eliminado')}</td><td>${escapeHtml(movement.type)}</td><td>${quantity} uds.</td><td>${escapeHtml(movement.reference || '—')}</td><td>${escapeHtml(movement.detail || '—')}</td></tr>`;
+          const productMarkup = product
+            ? escapeHtml(product.name)
+            : `<strong>Producto eliminado</strong><br>${escapeHtml(movement.productName || 'Nombre no disponible')}<br>SKU: ${escapeHtml(movement.productSku || '—')}`;
+          return `<tr><td>${escapeHtml(dateTime.format(new Date(movement.date)))}</td><td>${productMarkup}</td><td>${escapeHtml(movement.type)}</td><td>${quantity} uds.</td><td>${escapeHtml(movement.reference || '—')}</td><td>${escapeHtml(movement.detail || '—')}</td></tr>`;
         }).join('') || '<tr><td colspan="6">No hay movimientos en el período seleccionado.</td></tr>';
         document.querySelector('#report-paper')?.remove();
         const paper = document.createElement('article');
@@ -598,6 +694,8 @@
         if (currentUser.role === 'admin') renderWorkers();
         applyModuleAccess();
         document.body.classList.remove('login-locked');
+        updateProductDeleteButtons();
+        updateMovementDeleteButtons();
         document.querySelector('#login-error').textContent = '';
         document.querySelector('#page-title').focus({ preventScroll: true });
       });
@@ -658,6 +756,18 @@
 
       document.addEventListener('click', event => {
         if (!currentUser) return;
+        const movementDeleteButton = event.target.closest('[data-delete-movement]');
+        if (movementDeleteButton) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (currentUser.role !== 'admin') return;
+          const movement = data.movements.find(item => item.id === movementDeleteButton.dataset.deleteMovement);
+          if (!movement || !confirm('¿Eliminar definitivamente este movimiento?')) return;
+          data.movements = data.movements.filter(item => item.id !== movement.id);
+          render();
+          toast('Movimiento eliminado.');
+          return;
+        }
         const actionTrigger = event.target.closest('[data-action], #new-invoice, #print-movements');
         const actionModules = {
           'new-product': 'inventory',
