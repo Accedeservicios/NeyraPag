@@ -238,6 +238,20 @@
         data.nextInvoice = 1;
       }
 
+      const appRenderReports = renderReports;
+      renderReports = function (...args) {
+        const dateLabel = document.querySelector('#report-range-label');
+        if (dateLabel && !document.querySelector('#report-generated-date')) {
+          const dateSlot = document.createElement('span');
+          dateSlot.id = 'report-generated-date';
+          dateLabel.append(' · ', dateSlot);
+        }
+        const result = appRenderReports(...args);
+        const generatedDate = document.querySelector('#report-generated-date');
+        if (generatedDate) generatedDate.textContent = dateTime.format(new Date());
+        return result;
+      };
+
       const appRender = render;
       render = function (...args) {
         const result = appRender(...args);
@@ -246,6 +260,11 @@
       };
       persistenceReady = true;
       render();
+      document.addEventListener('change', event => {
+        if (!['report-period', 'report-start', 'report-end'].includes(event.target.id)) return;
+        event.stopImmediatePropagation();
+        renderReports();
+      }, true);
     }
 
     function showSessionView(viewName) {
@@ -535,8 +554,9 @@
       if (index !== -1) USERS.splice(index, 1);
       renderWorkers();
       savePersistentData();
-      document.querySelector('#bulk-import-products').addEventListener('click', openBulkProductImport);
     });
+
+    document.querySelector('#bulk-import-products').addEventListener('click', openBulkProductImport);
 
     document.addEventListener('click', event => {
       if (!currentUser) return;
